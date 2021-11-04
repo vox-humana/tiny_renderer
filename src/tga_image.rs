@@ -1,39 +1,10 @@
 use std::fs::File;
 use std::io::Write;
 use std::{mem, slice};
+use crate::rgb_image::{RGBImage, RGBColor};
 
-#[repr(C, packed)]
-#[derive(Clone)]
-pub struct TGAColor {
-    pub b: u8,
-    pub g: u8,
-    pub r: u8,
-}
-
-pub struct TGAImage {
-    pixels: Vec<TGAColor>,
-    pub width: u16,
-    pub height: u16,
-}
-
-pub const WHITE_COLOR: TGAColor = TGAColor { r: 255, g: 255, b: 255 };
-pub const BLACK_COLOR: TGAColor = TGAColor { r: 0, g: 0, b: 0 };
-pub const RED_COLOR: TGAColor = TGAColor { r: 255, g: 0, b: 0 };
-
-impl TGAImage {
-    pub fn new(width: u16, height: u16, color: TGAColor) -> Self {
-        TGAImage {
-            pixels: vec![color; (width * height) as usize],
-            width,
-            height,
-        }
-    }
-
-    pub fn set_pixel(&mut self, x: u16, y: u16, color: TGAColor) {
-        self.pixels[(x + y * self.width) as usize] = color;
-    }
-
-    pub fn write_tga(&self, path: &str) {
+impl RGBImage {
+    pub fn write_tga(&self, path: String) {
         #[repr(C, packed)]
         #[derive(Default)]
         struct TGAHeader {
@@ -67,7 +38,7 @@ impl TGAImage {
 
             let p_data: *const u8 = mem::transmute(&self.pixels[0]);
             let data = slice::from_raw_parts(
-                p_data, mem::size_of::<TGAColor>() * self.pixels.len(),
+                p_data, mem::size_of::<RGBColor>() * self.pixels.len(),
             );
             output_file.write_all(data).expect("Can't write pixels data");
         }
