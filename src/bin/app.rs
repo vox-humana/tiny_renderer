@@ -43,7 +43,6 @@ fn build_root_widget() -> impl Widget<AppState> {
     for lesson in lessons() {
         let button = Button::new(lesson.name).on_click(move |_ctx, data: &mut AppState, _env| {
             data.selected_lesson = LessonState::new(lesson);
-            println!("Click {}", data.selected_lesson.lesson.name);
         })
             .padding(10.0);
         column.add_child(button)
