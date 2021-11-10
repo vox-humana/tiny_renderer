@@ -1,9 +1,17 @@
 Taking [Tiny Renderer course](https://github.com/ssloy/tinyrenderer) in Rust
 
-For more fun use [Druid](https://github.com/linebender/druid.git) as UI framework for a tiny demo app.  
+For more fun uses [Druid](https://github.com/linebender/druid.git) as UI framework for a tiny demo app.  
+
+![Demo app screenshot](app_screenshot.png)
+
+Console app that generates tga images:
+```shell
+cargo run --bin images
+```
 
 ### Some Rust WTFs
-`impl for type defined outside of crate.`
+> impl for type defined outside of crate.
+
 Can't implement protocol outside the type crate. Seems like the only workaround is to add an extra wrapper type.
 
 Runtime panic for overflow. Unlike Swift, where `Int` is the default type for computation or even indexing, Rust forces you to select exact integer type.
