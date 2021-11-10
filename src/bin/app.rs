@@ -1,7 +1,9 @@
-use druid::{AppLauncher, UnitPoint, Widget, WidgetExt, WindowDesc, Lens, Data, ImageBuf, Env, Color};
-use druid::widget::{prelude::*, Flex, Image, Button, SizedBox};
 use druid::piet::ImageFormat;
-use tiny_renderer::lessons::{Lesson, lessons};
+use druid::widget::{prelude::*, Button, Flex, Image, SizedBox};
+use druid::{
+    AppLauncher, Color, Data, Env, ImageBuf, Lens, UnitPoint, Widget, WidgetExt, WindowDesc,
+};
+use tiny_renderer::lessons::{lessons, Lesson};
 use tiny_renderer::rgb_image::RGBImage;
 
 #[derive(Clone, Data, Lens)]
@@ -11,7 +13,7 @@ struct AppState {
 
 #[derive(Clone)]
 struct LessonState {
-    lesson: Lesson
+    lesson: Lesson,
 }
 
 impl LessonState {
@@ -31,7 +33,9 @@ pub fn main() {
         .title("TinyRenderer")
         .window_size((640.0, 480.0));
 
-    let state = AppState{ selected_lesson: LessonState::new(lessons()[0])};
+    let state = AppState {
+        selected_lesson: LessonState::new(lessons()[0]),
+    };
     AppLauncher::with_window(main_window)
         .log_to_console()
         .launch(state)
@@ -41,9 +45,10 @@ pub fn main() {
 fn build_root_widget() -> impl Widget<AppState> {
     let mut column = Flex::column();
     for lesson in lessons() {
-        let button = Button::new(lesson.name).on_click(move |_ctx, data: &mut AppState, _env| {
-            data.selected_lesson = LessonState::new(lesson);
-        })
+        let button = Button::new(lesson.name)
+            .on_click(move |_ctx, data: &mut AppState, _env| {
+                data.selected_lesson = LessonState::new(lesson);
+            })
             .padding(10.0);
         column.add_child(button)
     }
@@ -56,7 +61,8 @@ fn build_root_widget() -> impl Widget<AppState> {
 }
 
 fn image_to_buffer(image: RGBImage) -> ImageBuf {
-    let pixels: Vec<u8> = image.pixels
+    let pixels: Vec<u8> = image
+        .pixels
         .iter()
         .flat_map(|pixel| vec![pixel.r, pixel.g, pixel.b])
         .collect();
@@ -64,7 +70,7 @@ fn image_to_buffer(image: RGBImage) -> ImageBuf {
         pixels,
         ImageFormat::Rgb,
         image.width as usize,
-        image.height as usize
+        image.height as usize,
     );
 }
 
@@ -89,14 +95,26 @@ impl Widget<LessonState> for ReBuilder {
         self.inner.event(ctx, event, data, env)
     }
 
-    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &LessonState, env: &Env) {
+    fn lifecycle(
+        &mut self,
+        ctx: &mut LifeCycleCtx,
+        event: &LifeCycle,
+        data: &LessonState,
+        env: &Env,
+    ) {
         if let LifeCycle::WidgetAdded = event {
             self.rebuild_inner(data);
         }
         self.inner.lifecycle(ctx, event, data, env)
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &LessonState, data: &LessonState, _env: &Env) {
+    fn update(
+        &mut self,
+        ctx: &mut UpdateCtx,
+        old_data: &LessonState,
+        data: &LessonState,
+        _env: &Env,
+    ) {
         if !old_data.same(data) {
             self.rebuild_inner(data);
             ctx.children_changed();

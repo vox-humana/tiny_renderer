@@ -1,6 +1,6 @@
-use std::mem::swap;
-use crate::rgb_image::{Point, RGBColor};
 use crate::rgb_image::RGBImage;
+use crate::rgb_image::{Point, RGBColor};
+use std::mem::swap;
 
 // Lesson 1: Bresenham’s Line Drawing Algorithm
 // https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham’s-Line-Drawing-Algorithm
@@ -19,9 +19,9 @@ impl RGBImage {
     */
 
     pub(crate) fn line(&mut self, start: Point, end: Point, color: RGBColor) {
-        let mut x0: i32= start.x as i32;
+        let mut x0: i32 = start.x as i32;
         let mut y0: i32 = start.y as i32;
-        let mut x1: i32= end.x as i32;
+        let mut x1: i32 = end.x as i32;
         let mut y1: i32 = end.y as i32;
         let steep;
         if (x1 - x0).abs() < (y1 - y0).abs() {
@@ -42,7 +42,7 @@ impl RGBImage {
         let derror2 = dy.abs() * 2;
         let mut error2 = 0;
         let mut y = y0;
-        for x in x0 ..= x1 {
+        for x in x0..=x1 {
             if steep {
                 self.set_pixel(Point::from(y, x), color);
             } else {

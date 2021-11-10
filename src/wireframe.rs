@@ -1,7 +1,7 @@
+use crate::rgb_image::{Point, RGBColor, RGBImage};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
-use crate::rgb_image::{Point, RGBColor, RGBImage};
 
 #[derive(Copy, Clone)]
 struct Vertex3 {
@@ -58,27 +58,19 @@ impl WireframeModel {
     fn face_from_str(s: &str) -> [usize; 3] {
         // we use only 1 index
         fn first_vertex_index(s: &str) -> usize {
-            let v = s.split("/")
+            let v = s
+                .split("/")
                 .next()
                 .expect("index value")
                 .parse::<i32>()
                 .expect("usize value")
                 - 1; // in wavefront obj all indices start at 1, not zero
-            assert!(
-                v >= 0,
-                "only positive values"
-            );
+            assert!(v >= 0, "only positive values");
             return v as usize;
         }
         let mut it = s.split_ascii_whitespace();
-        let mut parse_index = || {
-            first_vertex_index(it.next().expect("coordinates"))
-        };
-        return [
-            parse_index(),
-            parse_index(),
-            parse_index()
-        ];
+        let mut parse_index = || first_vertex_index(it.next().expect("coordinates"));
+        return [parse_index(), parse_index(), parse_index()];
     }
 
     pub fn from_file(path: String) -> WireframeModel {

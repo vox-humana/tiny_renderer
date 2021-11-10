@@ -6,7 +6,11 @@ pub struct RGBColor {
     pub r: u8,
 }
 
-pub const WHITE_COLOR: RGBColor = RGBColor { r: 255, g: 255, b: 255 };
+pub const WHITE_COLOR: RGBColor = RGBColor {
+    r: 255,
+    g: 255,
+    b: 255,
+};
 pub const BLACK_COLOR: RGBColor = RGBColor { r: 0, g: 0, b: 0 };
 pub const RED_COLOR: RGBColor = RGBColor { r: 255, g: 0, b: 0 };
 pub const GREEN_COLOR: RGBColor = RGBColor { r: 0, g: 255, b: 0 };
@@ -26,7 +30,10 @@ impl Point {
     pub(crate) fn from(x: i32, y: i32) -> Point {
         assert!(x >= 0);
         assert!(y >= 0);
-        Point { x: x as u16, y: y as u16}
+        Point {
+            x: x as u16,
+            y: y as u16,
+        }
     }
 }
 
@@ -44,10 +51,11 @@ impl RGBImage {
     }
 
     pub fn flip(&mut self) {
-        for y in 0 .. self.height / 2 {
-            for x in 0 .. self.width {
+        for y in 0..self.height / 2 {
+            for x in 0..self.width {
                 let i0 = usize::from(x) + usize::from(y) * usize::from(self.width);
-                let i1 = usize::from(x) + usize::from(self.height - 1 - y) * usize::from(self.width);
+                let i1 =
+                    usize::from(x) + usize::from(self.height - 1 - y) * usize::from(self.width);
                 self.pixels.swap(i0, i1);
             }
         }
