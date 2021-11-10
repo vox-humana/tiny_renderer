@@ -22,6 +22,14 @@ pub(crate) struct Point {
     pub(crate) y: u16,
 }
 
+impl Point {
+    pub(crate) fn from(x: i32, y: i32) -> Point {
+        assert!(x >= 0);
+        assert!(y >= 0);
+        Point { x: x as u16, y: y as u16}
+    }
+}
+
 impl RGBImage {
     pub fn new(width: u16, height: u16, color: RGBColor) -> Self {
         RGBImage {

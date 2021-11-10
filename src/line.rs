@@ -19,19 +19,22 @@ impl RGBImage {
     */
 
     pub(crate) fn line(&mut self, start: Point, end: Point, color: RGBColor) {
-        let mut steep = false;
         let mut x0: i32= start.x as i32;
         let mut y0: i32 = start.y as i32;
         let mut x1: i32= end.x as i32;
         let mut y1: i32 = end.y as i32;
+        let steep;
         if (x1 - x0).abs() < (y1 - y0).abs() {
             swap(&mut x0, &mut y0);
             swap(&mut x1, &mut y1);
             steep = true;
+        } else {
+            steep = false;
         }
 
         if x0 > x1 {
             swap(&mut x0, &mut x1);
+            swap(&mut y0, &mut y1);
         }
 
         let dx = x1 - x0;
@@ -41,9 +44,9 @@ impl RGBImage {
         let mut y = y0;
         for x in x0 ..= x1 {
             if steep {
-                self.set_pixel(Point { x: y as u16, y: x as u16 }, color);
+                self.set_pixel(Point::from(y, x), color);
             } else {
-                self.set_pixel(Point { x: x as u16, y: y as u16 }, color);
+                self.set_pixel(Point::from(x, y), color);
             }
             error2 += derror2;
             if error2 > dx {
