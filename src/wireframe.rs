@@ -1,4 +1,5 @@
-use crate::rgb_image::{Point, RGBColor, RGBImage};
+use crate::point::Point;
+use crate::rgb_image::{RGBColor, RGBImage};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;

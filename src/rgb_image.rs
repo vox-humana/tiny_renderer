@@ -1,3 +1,5 @@
+use crate::point::Point;
+
 #[repr(C, packed)]
 #[derive(Clone, Copy)]
 pub struct RGBColor {
@@ -21,22 +23,6 @@ pub struct RGBImage {
     pub height: u16,
 }
 
-pub(crate) struct Point {
-    pub(crate) x: u16,
-    pub(crate) y: u16,
-}
-
-impl Point {
-    pub(crate) fn from(x: i32, y: i32) -> Point {
-        assert!(x >= 0);
-        assert!(y >= 0);
-        Point {
-            x: x as u16,
-            y: y as u16,
-        }
-    }
-}
-
 impl RGBImage {
     pub fn new(width: u16, height: u16, color: RGBColor) -> Self {
         RGBImage {
@@ -50,7 +36,7 @@ impl RGBImage {
         self.pixels[usize::from(point.x) + usize::from(point.y) * usize::from(self.width)] = color;
     }
 
-    pub fn flip(&mut self) {
+    pub fn flip_vertically(&mut self) {
         for y in 0..self.height / 2 {
             for x in 0..self.width {
                 let i0 = usize::from(x) + usize::from(y) * usize::from(self.width);

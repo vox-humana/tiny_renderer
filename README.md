@@ -33,3 +33,9 @@ unsafe {
     );
 }
 ```
+
+Compiler knows array size, however, it doesn't know that it is not empty: 
+```rust
+let non_empty_array: [V; 2] = ...
+let optional_value: Option<&V> = non_empty_array.first();
+```

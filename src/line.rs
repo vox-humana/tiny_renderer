@@ -1,5 +1,6 @@
+use crate::point::Point;
+use crate::rgb_image::RGBColor;
 use crate::rgb_image::RGBImage;
-use crate::rgb_image::{Point, RGBColor};
 use std::mem::swap;
 
 // Lesson 1: Bresenham’s Line Drawing Algorithm
