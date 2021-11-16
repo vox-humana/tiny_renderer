@@ -19,7 +19,7 @@ fn lesson1() -> RGBImage {
 fn lesson1_1() -> RGBImage {
     let mut image = RGBImage::new(640, 640, BLACK_COLOR);
     let model = WireframeModel::from_file("african_head.obj".to_string());
-    image.render(model, WHITE_COLOR);
+    image.render_frame(model, WHITE_COLOR);
     image.flip_vertically();
     return image;
 }
@@ -30,11 +30,11 @@ fn lesson2() -> RGBImage {
     let t1 = [(180, 50), (150, 1), (70, 180)];
     let t2 = [(180, 150), (120, 160), (130, 180)];
     let points = |a: [(u16, u16); 3]| a.map(|t| Point { x: t.0, y: t.1 });
+    let shift = |points: [Point; 3], dx: i32, dy: i32| points.map(|p| p.shift(dx, dy));
+
     image.triangle_v(points(t0), RED_COLOR);
     image.triangle_v(points(t1), WHITE_COLOR);
     image.triangle_v(points(t2), GREEN_COLOR);
-
-    let shift = |points: [Point; 3], dx: i32, dy: i32| points.map(|p| p.shift(dx, dy));
 
     image.triangle_v_sorted(shift(points(t0), 300, 0));
     image.triangle_v_sorted(shift(points(t1), 300, 0));
@@ -44,6 +44,17 @@ fn lesson2() -> RGBImage {
     image.triangle_filed(shift(points(t1), 0, 300), WHITE_COLOR);
     image.triangle_filed(shift(points(t2), 0, 300), GREEN_COLOR);
 
+    let pts = [(10, 10), (100, 30), (190, 160)];
+    image.triangle_v2(shift(points(pts), 300, 300), RED_COLOR);
+
+    image.flip_vertically();
+    return image;
+}
+
+fn lesson2_2() -> RGBImage {
+    let mut image = RGBImage::new(640, 640, BLACK_COLOR);
+    let model = WireframeModel::from_file("african_head.obj".to_string());
+    image.render(model);
     image.flip_vertically();
     return image;
 }
@@ -60,7 +71,7 @@ impl Lesson {
     }
 }
 
-pub fn lessons() -> [Lesson; 4] {
+pub fn lessons() -> [Lesson; 5] {
     [
         Lesson {
             name: "Pixel",
@@ -77,6 +88,10 @@ pub fn lessons() -> [Lesson; 4] {
         Lesson {
             name: "Triangles",
             renderer: lesson2,
+        },
+        Lesson {
+            name: "Colorful wireframe",
+            renderer: lesson2_2,
         },
     ]
 }

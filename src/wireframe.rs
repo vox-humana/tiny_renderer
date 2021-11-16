@@ -1,15 +1,10 @@
-use crate::point::Point;
+use crate::point::{Point, Vec2, Vec3};
 use crate::rgb_image::{RGBColor, RGBImage};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 
-#[derive(Copy, Clone)]
-struct Vertex3 {
-    x: f32,
-    y: f32,
-    z: f32,
-}
+pub(crate) type Vertex3 = Vec3<f32>;
 
 pub struct WireframeModel {
     vertexes: Vec<Vertex3>,
@@ -102,7 +97,7 @@ impl WireframeModel {
 }
 
 impl RGBImage {
-    pub fn render(&mut self, wireframe: WireframeModel, color: RGBColor) {
+    pub fn render_frame(&mut self, wireframe: WireframeModel, color: RGBColor) {
         for face in wireframe.faces {
             for j in 0..3 {
                 fn normalize(value: f32, side: u16) -> u16 {
@@ -117,5 +112,26 @@ impl RGBImage {
                 self.line(Point { x: x0, y: y0 }, Point { x: x1, y: y1 }, color);
             }
         }
+    }
+
+    pub fn render(&mut self, wireframe: WireframeModel) {
+        for face in wireframe.faces {
+            let projection = |j: usize| {
+                let world_coords: Vec3<f32> = wireframe.vertexes[face[j]];
+                Vec2::<u16> {
+                    x: ((world_coords.x + 1.0) * self.width as f32 / 2.0) as u16,
+                    y: ((world_coords.y + 1.0) * self.height as f32 / 2.0) as u16,
+                }
+            };
+            let pts = (0..3).map(projection).collect();
+            self.triangle_v2(pts, RGBColor::random());
+        }
+    }
+}
+
+impl FromIterator<Point> for [Point; 3] {
+    fn from_iter<T: IntoIterator<Item = Vec2<u16>>>(iter: T) -> Self {
+        let mut it = iter.into_iter();
+        [it.next().unwrap(), it.next().unwrap(), it.next().unwrap()]
     }
 }

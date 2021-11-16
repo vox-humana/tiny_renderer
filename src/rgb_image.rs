@@ -1,4 +1,5 @@
 use crate::point::Point;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[repr(C, packed)]
 #[derive(Clone, Copy)]
@@ -16,6 +17,25 @@ pub const WHITE_COLOR: RGBColor = RGBColor {
 pub const BLACK_COLOR: RGBColor = RGBColor { r: 0, g: 0, b: 0 };
 pub const RED_COLOR: RGBColor = RGBColor { r: 255, g: 0, b: 0 };
 pub const GREEN_COLOR: RGBColor = RGBColor { r: 0, g: 255, b: 0 };
+
+impl RGBColor {
+    pub(crate) fn random() -> RGBColor {
+        RGBColor {
+            r: random_byte(),
+            g: random_byte(),
+            b: random_byte(),
+        }
+    }
+}
+
+// Rust doesn't have any built-in random :facepalm:
+fn random_byte() -> u8 {
+    (SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .subsec_nanos()
+        % 255) as u8
+}
 
 pub struct RGBImage {
     pub pixels: Vec<RGBColor>,
