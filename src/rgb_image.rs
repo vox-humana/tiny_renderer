@@ -17,14 +17,17 @@ pub const WHITE_COLOR: RGBColor = RGBColor {
 pub const BLACK_COLOR: RGBColor = RGBColor { r: 0, g: 0, b: 0 };
 pub const RED_COLOR: RGBColor = RGBColor { r: 255, g: 0, b: 0 };
 pub const GREEN_COLOR: RGBColor = RGBColor { r: 0, g: 255, b: 0 };
+pub const BLUE_COLOR: RGBColor = RGBColor { r: 0, g: 0, b: 255 };
 
 impl RGBColor {
     pub(crate) fn random() -> RGBColor {
-        RGBColor {
-            r: random_byte(),
-            g: random_byte(),
-            b: random_byte(),
-        }
+        let all = [RED_COLOR, GREEN_COLOR, WHITE_COLOR, BLUE_COLOR];
+        all[random_byte() as usize % 4]
+    }
+
+    pub(crate) fn intensity(i: f32) -> RGBColor {
+        let v = ((i * 255 as f32) as i32 % 255) as u8;
+        RGBColor { b: v, g: v, r: v }
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::point::Point;
+use crate::point::{Point, Vec3};
 use crate::rgb_image::{RGBImage, BLACK_COLOR, GREEN_COLOR, RED_COLOR, WHITE_COLOR};
 use crate::wireframe::WireframeModel;
 
@@ -54,7 +54,22 @@ fn lesson2() -> RGBImage {
 fn lesson2_2() -> RGBImage {
     let mut image = RGBImage::new(640, 640, BLACK_COLOR);
     let model = WireframeModel::from_file("african_head.obj".to_string());
-    image.render(model);
+    image.render_random(model);
+    image.flip_vertically();
+    return image;
+}
+
+fn lesson2_3() -> RGBImage {
+    let mut image = RGBImage::new(640, 640, BLACK_COLOR);
+    let model = WireframeModel::from_file("african_head.obj".to_string());
+    image.render_light(
+        model,
+        Vec3 {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        },
+    );
     image.flip_vertically();
     return image;
 }
@@ -71,7 +86,7 @@ impl Lesson {
     }
 }
 
-pub fn lessons() -> [Lesson; 5] {
+pub fn lessons() -> [Lesson; 6] {
     [
         Lesson {
             name: "Pixel",
@@ -92,6 +107,10 @@ pub fn lessons() -> [Lesson; 5] {
         Lesson {
             name: "Colorful wireframe",
             renderer: lesson2_2,
+        },
+        Lesson {
+            name: "Lighted Wireframe",
+            renderer: lesson2_3,
         },
     ]
 }

@@ -1,4 +1,4 @@
-use crate::point::{Point, Vec2, Vec3};
+use crate::point::{cross, diff, Point, Vec2, Vec3};
 use crate::rgb_image::{RGBColor, RGBImage};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -114,7 +114,7 @@ impl RGBImage {
         }
     }
 
-    pub fn render(&mut self, wireframe: WireframeModel) {
+    pub fn render_random(&mut self, wireframe: WireframeModel) {
         for face in wireframe.faces {
             let projection = |j: usize| {
                 let world_coords: Vec3<f32> = wireframe.vertexes[face[j]];
@@ -125,6 +125,29 @@ impl RGBImage {
             };
             let pts = (0..3).map(projection).collect();
             self.triangle_v2(pts, RGBColor::random());
+        }
+    }
+
+    pub(crate) fn render_light(&mut self, wireframe: WireframeModel, light_dir: Vec3<f32>) {
+        for face in wireframe.faces {
+            let mut n = cross(
+                diff(wireframe.vertexes[face[2]], wireframe.vertexes[face[0]]),
+                diff(wireframe.vertexes[face[1]], wireframe.vertexes[face[0]]),
+            );
+            n.normalize();
+            let intensity = light_dir.x * n.x + light_dir.y * n.y + light_dir.z * n.z;
+
+            if intensity > 0.0 {
+                let projection = |j: usize| {
+                    let world_coords: Vec3<f32> = wireframe.vertexes[face[j]];
+                    Vec2::<u16> {
+                        x: ((world_coords.x + 1.0) * self.width as f32 / 2.0) as u16,
+                        y: ((world_coords.y + 1.0) * self.height as f32 / 2.0) as u16,
+                    }
+                };
+                let pts = (0..3).map(projection).collect();
+                self.triangle_v2(pts, RGBColor::intensity(intensity));
+            }
         }
     }
 }
