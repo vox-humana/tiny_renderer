@@ -1,5 +1,4 @@
 use crate::point::Point;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 #[repr(C, packed)]
 #[derive(Clone, Copy)]
@@ -21,23 +20,32 @@ pub const BLUE_COLOR: RGBColor = RGBColor { r: 0, g: 0, b: 255 };
 
 impl RGBColor {
     pub(crate) fn random() -> RGBColor {
-        let all = [RED_COLOR, GREEN_COLOR, WHITE_COLOR, BLUE_COLOR];
-        all[random_byte() as usize % 4]
+        RGBColor {
+            b: random_byte(),
+            g: random_byte(),
+            r: random_byte(),
+        }
     }
 
     pub(crate) fn intensity(i: f32) -> RGBColor {
-        let v = ((i * 255 as f32) as i32 % 255) as u8;
+        let v = (i * 255.0) as u8;
         RGBColor { b: v, g: v, r: v }
     }
 }
 
-// Rust doesn't have any built-in random :facepalm:
+// Rust standard library doesn't have any built-in pseudo random generator :facepalm:
+// Let's use some simple one
+// https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+fn lcg_parkmiller(state: u32) -> u32 {
+    ((state as u64) * 48271 % 0x7fffffff) as u32
+}
+
 fn random_byte() -> u8 {
-    (SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .subsec_nanos()
-        % 255) as u8
+    static mut STATE: u32 = 13;
+    unsafe {
+        STATE = lcg_parkmiller(STATE);
+        return (STATE % 255) as u8;
+    }
 }
 
 pub struct RGBImage {

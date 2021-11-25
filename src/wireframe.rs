@@ -116,39 +116,41 @@ impl RGBImage {
 
     pub fn render_random(&mut self, wireframe: WireframeModel) {
         for face in wireframe.faces {
-            let projection = |j: usize| {
-                let world_coords: Vec3<f32> = wireframe.vertexes[face[j]];
-                Vec2::<u16> {
-                    x: ((world_coords.x + 1.0) * self.width as f32 / 2.0) as u16,
-                    y: ((world_coords.y + 1.0) * self.height as f32 / 2.0) as u16,
-                }
-            };
-            let pts = (0..3).map(projection).collect();
-            self.triangle_v2(pts, RGBColor::random());
+            let world_coords = face.map(|f| wireframe.vertexes[f]);
+            let pts = RGBImage::screen_triangle(world_coords, self.width, self.height);
+            self.triangle_filed(pts, RGBColor::random());
         }
     }
 
     pub(crate) fn render_light(&mut self, wireframe: WireframeModel, light_dir: Vec3<f32>) {
         for face in wireframe.faces {
+            let world_coords = face.map(|f| wireframe.vertexes[f]);
             let mut n = cross(
-                diff(wireframe.vertexes[face[2]], wireframe.vertexes[face[0]]),
-                diff(wireframe.vertexes[face[1]], wireframe.vertexes[face[0]]),
+                diff(world_coords[2], world_coords[0]),
+                diff(world_coords[1], world_coords[0]),
             );
             n.normalize();
             let intensity = light_dir.x * n.x + light_dir.y * n.y + light_dir.z * n.z;
 
             if intensity > 0.0 {
-                let projection = |j: usize| {
-                    let world_coords: Vec3<f32> = wireframe.vertexes[face[j]];
-                    Vec2::<u16> {
-                        x: ((world_coords.x + 1.0) * self.width as f32 / 2.0) as u16,
-                        y: ((world_coords.y + 1.0) * self.height as f32 / 2.0) as u16,
-                    }
-                };
-                let pts = (0..3).map(projection).collect();
-                self.triangle_v2(pts, RGBColor::intensity(intensity));
+                self.triangle_filed(
+                    RGBImage::screen_triangle(world_coords, self.width, self.height),
+                    RGBColor::intensity(intensity),
+                );
             }
         }
+    }
+
+    fn screen_triangle(world_coords: [Vec3<f32>; 3], width: u16, height: u16) -> [Vec2<u16>; 3] {
+        let projection = |world_coords: Vec3<f32>| Vec2::<u16> {
+            x: ((world_coords.x + 1.0) * (width as f32) / 2.0) as u16,
+            y: ((world_coords.y + 1.0) * (height as f32) / 2.0) as u16,
+        };
+        [
+            projection(world_coords[0]),
+            projection(world_coords[1]),
+            projection(world_coords[2]),
+        ]
     }
 }
 

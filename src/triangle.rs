@@ -64,9 +64,9 @@ impl RGBImage {
 
             let segment_height: i32;
             if second_half {
-                segment_height = t2y - t1y + 1;
+                segment_height = t2y - t1y;
             } else {
-                segment_height = t1y - t0y + 1;
+                segment_height = t1y - t0y;
             }
             let alpha = i as f32 / total_height as f32;
             let beta: f32;
