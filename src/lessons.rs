@@ -74,6 +74,21 @@ fn lesson2_3() -> RGBImage {
     return image;
 }
 
+fn lesson3_1() -> RGBImage {
+    let mut image = RGBImage::new(640, 640, BLACK_COLOR);
+    let model = WireframeModel::from_file("african_head.obj".to_string());
+    image.render_z_buffer(
+        model,
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+    );
+    image.flip_vertically();
+    return image;
+}
+
 #[derive(Copy, Clone)]
 pub struct Lesson {
     pub name: &'static str,
@@ -86,7 +101,7 @@ impl Lesson {
     }
 }
 
-pub fn lessons() -> [Lesson; 6] {
+pub fn lessons() -> [Lesson; 7] {
     [
         Lesson {
             name: "Pixel",
@@ -111,6 +126,10 @@ pub fn lessons() -> [Lesson; 6] {
         Lesson {
             name: "Lighted Wireframe",
             renderer: lesson2_3,
+        },
+        Lesson {
+            name: "Lighted Wireframe (z buffer)",
+            renderer: lesson3_1,
         },
     ]
 }

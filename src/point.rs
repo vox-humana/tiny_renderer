@@ -36,6 +36,16 @@ impl Vec2<u16> {
     }
 }
 
+impl Vec3<u16> {
+    pub(crate) fn as_i32(self) -> Vec3<i32> {
+        Vec3 {
+            x: self.x as i32,
+            y: self.y as i32,
+            z: self.z as i32,
+        }
+    }
+}
+
 impl Vec3<f32> {
     fn norm(self) -> f32 {
         f32::sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
@@ -74,6 +84,11 @@ pub(crate) fn barycentric(pts: [Vec2<i32>; 3], p: Vec2<i32>) -> Vec3<f32> {
         y: u.y as f32 / u.z as f32,
         z: u.x as f32 / u.z as f32,
     };
+}
+
+pub(crate) fn barycentric_3d(pts: [Vec3<i32>; 3], p: Vec2<i32>) -> Vec3<f32> {
+    let pts_2d = pts.map(|p| Vec2 { x: p.x, y: p.y });
+    barycentric(pts_2d, p)
 }
 
 pub(crate) fn cross<T: Mul<Output = T> + Sub<Output = T> + Copy>(

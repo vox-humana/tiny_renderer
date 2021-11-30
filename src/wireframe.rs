@@ -141,10 +141,43 @@ impl RGBImage {
         }
     }
 
+    pub(crate) fn render_z_buffer(&mut self, wireframe: WireframeModel, light_dir: Vec3<f32>) {
+        let z_buffer_size: i32 = self.width as i32 * self.height as i32;
+        let mut z_buffer: Vec<f32> = (0..z_buffer_size).map(|_x| -1.0).collect();
+
+        for face in wireframe.faces {
+            let world_coords = face.map(|f| wireframe.vertexes[f]);
+            let mut n = cross(
+                diff(world_coords[2], world_coords[0]),
+                diff(world_coords[1], world_coords[0]),
+            );
+            n.normalize();
+            let intensity = light_dir.x * n.x + light_dir.y * n.y + light_dir.z * n.z;
+
+            if intensity > 0.0 {
+                let pts = RGBImage::screen_triangle_3d(world_coords, self.width, self.height);
+                self.triangle_z_buffer(pts, &mut z_buffer, RGBColor::intensity(intensity));
+            }
+        }
+    }
+
     fn screen_triangle(world_coords: [Vec3<f32>; 3], width: u16, height: u16) -> [Vec2<u16>; 3] {
         let projection = |world_coords: Vec3<f32>| Vec2::<u16> {
             x: ((world_coords.x + 1.0) * (width as f32) / 2.0) as u16,
             y: ((world_coords.y + 1.0) * (height as f32) / 2.0) as u16,
+        };
+        [
+            projection(world_coords[0]),
+            projection(world_coords[1]),
+            projection(world_coords[2]),
+        ]
+    }
+
+    fn screen_triangle_3d(world_coords: [Vec3<f32>; 3], width: u16, height: u16) -> [Vec3<u16>; 3] {
+        let projection = |world_coords: Vec3<f32>| Vec3::<u16> {
+            x: ((world_coords.x + 1.0) * (width as f32) / 2.0) as u16,
+            y: ((world_coords.y + 1.0) * (height as f32) / 2.0) as u16,
+            z: world_coords.z as u16,
         };
         [
             projection(world_coords[0]),

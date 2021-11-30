@@ -1,4 +1,4 @@
-use crate::point::{barycentric, Point, Vec2};
+use crate::point::{barycentric, barycentric_3d, Point, Vec2, Vec3};
 use crate::rgb_image::{RGBColor, RGBImage, GREEN_COLOR, RED_COLOR};
 use std::cmp::{max, min};
 use std::mem::swap;
@@ -107,5 +107,50 @@ impl RGBImage {
         self.line(p1, p2, color);
         self.line(p2, p3, color);
         self.line(p3, p1, color);
+    }
+
+    pub(crate) fn triangle_z_buffer(
+        &mut self,
+        points: [Vec3<u16>; 3],
+        zbuffer: &mut Vec<f32>,
+        color: RGBColor,
+    ) {
+        let mut b_box_min = Vec2 {
+            x: self.width - 1,
+            y: self.height - 1,
+        };
+        let mut b_box_max = Vec2 { x: 0, y: 0 };
+        let clamp = b_box_min;
+        for i in 0..3 {
+            b_box_min.x = max(0, min(b_box_min.x, points[i].x));
+            b_box_min.y = max(0, min(b_box_min.y, points[i].y));
+            b_box_max.x = min(clamp.x, max(b_box_max.x, points[i].x));
+            b_box_max.y = min(clamp.y, max(b_box_max.y, points[i].y));
+        }
+
+        for x in b_box_min.x..=b_box_max.x {
+            for y in b_box_min.y..=b_box_max.y {
+                let pts = points.map(|p| p.as_i32());
+                let bc_screen = barycentric_3d(
+                    pts,
+                    Vec2 {
+                        x: x as i32,
+                        y: y as i32,
+                    },
+                );
+                if bc_screen.x < 0.0 || bc_screen.y < 0.0 || bc_screen.z < 0.0 {
+                    continue;
+                }
+                let mut z = 0.0;
+                z += pts[0].z as f32 * bc_screen.x;
+                z += pts[1].z as f32 * bc_screen.y;
+                z += pts[2].z as f32 * bc_screen.z;
+                let buffer_index = (x as i32 + y as i32 * self.width as i32) as usize;
+                if zbuffer[buffer_index] < z {
+                    zbuffer[buffer_index] = z;
+                    self.set_pixel(Point { x, y }, color);
+                }
+            }
+        }
     }
 }

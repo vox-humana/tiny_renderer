@@ -45,3 +45,7 @@ let optional_value: Option<&V> = non_empty_array.first();
 ---
 There is **no** built-in pseudo random function
 https://github.com/rust-random/getrandom/issues/21
+---
+No functions overloading
+---
+No built-in numeric trait
