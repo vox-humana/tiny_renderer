@@ -89,6 +89,23 @@ fn lesson3_1() -> RGBImage {
     return image;
 }
 
+fn lesson3_2() -> RGBImage {
+    let mut canvas = RGBImage::new(640, 640, BLACK_COLOR);
+    let texture = image::open("african_head_diffuse.tga").unwrap().flipv();
+    let model = WireframeModel::from_file("african_head.obj".to_string());
+    canvas.render_z_buffer_texture(
+        model,
+        texture,
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+    );
+    canvas.flip_vertically();
+    return canvas;
+}
+
 #[derive(Copy, Clone)]
 pub struct Lesson {
     pub name: &'static str,
@@ -101,7 +118,7 @@ impl Lesson {
     }
 }
 
-pub fn lessons() -> [Lesson; 7] {
+pub fn lessons() -> [Lesson; 8] {
     [
         Lesson {
             name: "Pixel",
@@ -130,6 +147,10 @@ pub fn lessons() -> [Lesson; 7] {
         Lesson {
             name: "Lighted Wireframe (z buffer)",
             renderer: lesson3_1,
+        },
+        Lesson {
+            name: "Textured Wireframe",
+            renderer: lesson3_2,
         },
     ]
 }

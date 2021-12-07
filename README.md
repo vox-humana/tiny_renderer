@@ -25,6 +25,7 @@ y - x // panic, maybe
 ```
 Also, it doesn't give you `abs` for unsigned https://github.com/rust-lang/rfcs/issues/2914.
 So I decided to use `i32` for calculation in Bresenham’s Line Drawing Algorithm and then force cast :facepalm: back to `u16`.
+
 ---
 Structs file serialization requires unsafe.
 Maybe, I am missing something but this is super verbose and potential source of errors:
@@ -42,10 +43,16 @@ Compiler knows array size, however, it doesn't know that it is not empty:
 let non_empty_array: [V; 2] = ...
 let optional_value: Option<&V> = non_empty_array.first();
 ```
+
 ---
 There is **no** built-in pseudo random function
 https://github.com/rust-random/getrandom/issues/21
+
 ---
 No functions overloading
+
 ---
 No built-in numeric trait
+
+---
+Closures are not functions. They are completely different types.

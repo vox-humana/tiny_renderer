@@ -31,6 +31,14 @@ impl RGBColor {
         let v = (i * 255.0) as u8;
         RGBColor { b: v, g: v, r: v }
     }
+
+    pub(crate) fn with_intensity(self, i: f32) -> RGBColor {
+        RGBColor {
+            b: (self.b as f32 * i) as u8,
+            g: (self.g as f32 * i) as u8,
+            r: (self.r as f32 * i) as u8,
+        }
+    }
 }
 
 // Rust standard library doesn't have any built-in pseudo random generator :facepalm:

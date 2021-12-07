@@ -1,14 +1,22 @@
 use crate::point::{cross, diff, Point, Vec2, Vec3};
 use crate::rgb_image::{RGBColor, RGBImage};
+use image::{DynamicImage, GenericImageView};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 
 pub(crate) type Vertex3 = Vec3<f32>;
 
+#[derive(PartialEq, Debug, Copy, Clone)]
+pub struct Face {
+    vertex_index: usize,
+    texture_index: usize,
+}
+
 pub struct WireframeModel {
     vertexes: Vec<Vertex3>,
-    faces: Vec<[usize; 3]>,
+    faces: Vec<[Face; 3]>,
+    texture_coord: Vec<(f32, f32)>,
 }
 
 impl FromStr for Vertex3 {
@@ -46,27 +54,64 @@ mod tests {
     fn test_face_from_str() {
         let s = "f 1193/1240/1193 1180/1227/1180 1179/1226/1179";
         let face = WireframeModel::face_from_str(&s[2..]);
-        assert_eq!(face, [1192, 1179, 1178]);
+        let expected: [Face; 3] = [
+            Face {
+                vertex_index: 1192,
+                texture_index: 1239,
+            },
+            Face {
+                vertex_index: 1179,
+                texture_index: 1226,
+            },
+            Face {
+                vertex_index: 1178,
+                texture_index: 1225,
+            },
+        ];
+        assert_eq!(face, expected);
+    }
+
+    #[test]
+    fn test_texture_coord_from_str() {
+        let s = "vt  0.532 0.923 0.000";
+        let face = WireframeModel::texture_coord(&s[2..]);
+        assert_eq!(face, (0.532, 0.923));
     }
 }
 
 impl WireframeModel {
-    fn face_from_str(s: &str) -> [usize; 3] {
-        // we use only 1 index
-        fn first_vertex_index(s: &str) -> usize {
-            let v = s
-                .split("/")
-                .next()
-                .expect("index value")
-                .parse::<i32>()
-                .expect("usize value")
-                - 1; // in wavefront obj all indices start at 1, not zero
-            assert!(v >= 0, "only positive values");
-            return v as usize;
+    fn texture_coord(s: &str) -> (f32, f32) {
+        let mut it = s.split_ascii_whitespace();
+        let x = it
+            .next()
+            .expect("x value")
+            .parse::<f32>()
+            .expect("float value");
+        let y = it
+            .next()
+            .expect("y value")
+            .parse::<f32>()
+            .expect("float value");
+        return (x, y);
+    }
+
+    fn face_from_str(s: &str) -> [Face; 3] {
+        // we use only first 2 indexes
+        fn index(s: &str) -> usize {
+            let i = s.parse::<i32>().expect("usize value") - 1; // in wavefront obj all indices start at 1, not zero
+            return i as usize;
+        }
+
+        fn face(s: &str) -> Face {
+            let mut it = s.split("/");
+            return Face {
+                vertex_index: index(it.next().expect("uv index value")),
+                texture_index: index(it.next().expect("vertex index value")),
+            };
         }
         let mut it = s.split_ascii_whitespace();
-        let mut parse_index = || first_vertex_index(it.next().expect("coordinates"));
-        return [parse_index(), parse_index(), parse_index()];
+        let mut parse_face = || face(it.next().expect("coordinates"));
+        return [parse_face(), parse_face(), parse_face()];
     }
 
     pub fn from_file(path: String) -> WireframeModel {
@@ -74,7 +119,8 @@ impl WireframeModel {
         let reader = BufReader::new(file);
 
         let mut vertexes: Vec<Vertex3> = vec![];
-        let mut faces: Vec<[usize; 3]> = vec![];
+        let mut faces: Vec<[Face; 3]> = vec![];
+        let mut texture_coord: Vec<(f32, f32)> = vec![];
         for (_, line) in reader.lines().enumerate() {
             let line = line.unwrap();
             let s = line.trim();
@@ -87,12 +133,19 @@ impl WireframeModel {
             } else if s.starts_with("f ") {
                 let f = Self::face_from_str(&s[2..]);
                 faces.push(f);
+            } else if s.starts_with("vt") {
+                let c = Self::texture_coord(&s[2..]);
+                texture_coord.push(c);
             } else {
                 println!("unsupported line {}", s)
             }
         }
 
-        WireframeModel { vertexes, faces }
+        WireframeModel {
+            vertexes,
+            faces,
+            texture_coord,
+        }
     }
 }
 
@@ -103,8 +156,8 @@ impl RGBImage {
                 fn normalize(value: f32, side: u16) -> u16 {
                     ((value + 1.0) * (side as f32 - 1.0) / 2.0) as u16
                 }
-                let v0 = wireframe.vertexes[face[j]];
-                let v1 = wireframe.vertexes[face[(j + 1) % 3]];
+                let v0 = wireframe.vertexes[face[j].vertex_index];
+                let v1 = wireframe.vertexes[face[(j + 1) % 3].vertex_index];
                 let x0 = normalize(v0.x, self.width);
                 let y0 = normalize(v0.y, self.height);
                 let x1 = normalize(v1.x, self.width);
@@ -116,7 +169,7 @@ impl RGBImage {
 
     pub fn render_random(&mut self, wireframe: WireframeModel) {
         for face in wireframe.faces {
-            let world_coords = face.map(|f| wireframe.vertexes[f]);
+            let world_coords = face.map(|f| wireframe.vertexes[f.vertex_index]);
             let pts = RGBImage::screen_triangle(world_coords, self.width, self.height);
             self.triangle_filed(pts, RGBColor::random());
         }
@@ -124,7 +177,7 @@ impl RGBImage {
 
     pub(crate) fn render_light(&mut self, wireframe: WireframeModel, light_dir: Vec3<f32>) {
         for face in wireframe.faces {
-            let world_coords = face.map(|f| wireframe.vertexes[f]);
+            let world_coords = face.map(|f| wireframe.vertexes[f.vertex_index]);
             let mut n = cross(
                 diff(world_coords[2], world_coords[0]),
                 diff(world_coords[1], world_coords[0]),
@@ -146,7 +199,7 @@ impl RGBImage {
         let mut z_buffer: Vec<f32> = (0..z_buffer_size).map(|_x| -1.0).collect();
 
         for face in wireframe.faces {
-            let world_coords = face.map(|f| wireframe.vertexes[f]);
+            let world_coords = face.map(|f| wireframe.vertexes[f.vertex_index]);
             let mut n = cross(
                 diff(world_coords[2], world_coords[0]),
                 diff(world_coords[1], world_coords[0]),
@@ -157,6 +210,56 @@ impl RGBImage {
             if intensity > 0.0 {
                 let pts = RGBImage::screen_triangle_3d(world_coords, self.width, self.height);
                 self.triangle_z_buffer(pts, &mut z_buffer, RGBColor::intensity(intensity));
+            }
+        }
+    }
+
+    pub(crate) fn render_z_buffer_texture(
+        &mut self,
+        wireframe: WireframeModel,
+        texture: DynamicImage,
+        light_dir: Vec3<f32>,
+    ) {
+        let z_buffer_size: i32 = self.width as i32 * self.height as i32;
+        let mut z_buffer: Vec<f32> = (0..z_buffer_size).map(|_x| -1.0).collect();
+
+        for face in wireframe.faces {
+            let world_coords = face.map(|f| wireframe.vertexes[f.vertex_index]);
+            let mut n = cross(
+                diff(world_coords[2], world_coords[0]),
+                diff(world_coords[1], world_coords[0]),
+            );
+            n.normalize();
+            let intensity = light_dir.x * n.x + light_dir.y * n.y + light_dir.z * n.z;
+
+            let texture_coords = face
+                .map(|f| wireframe.texture_coord[f.texture_index])
+                .map(|p| Vec2 {
+                    x: texture.width() as f32 * p.0,
+                    y: texture.height() as f32 * p.1,
+                });
+
+            let texture_color = |bc: Vec3<f32>| -> RGBColor {
+                let uv = Vec2 {
+                    x: texture_coords[0].x * bc.x
+                        + texture_coords[1].x * bc.y
+                        + texture_coords[2].x * bc.z,
+                    y: texture_coords[0].y * bc.x
+                        + texture_coords[1].y * bc.y
+                        + texture_coords[2].y * bc.z,
+                };
+                let pixel = texture.get_pixel(uv.x as u32, uv.y as u32);
+                let color = RGBColor {
+                    r: pixel.0[0],
+                    g: pixel.0[1],
+                    b: pixel.0[2],
+                }
+                .with_intensity(intensity);
+                return color;
+            };
+            if intensity > 0.0 {
+                let pts = RGBImage::screen_triangle_3d(world_coords, self.width, self.height);
+                self.triangle_z_buffer_bary(pts, &mut z_buffer, &texture_color);
             }
         }
     }
