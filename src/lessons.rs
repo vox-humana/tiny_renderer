@@ -110,7 +110,7 @@ fn lesson4() -> RGBImage {
     let mut canvas = RGBImage::new(640, 640, BLACK_COLOR);
     let texture = image::open("african_head_diffuse.tga").unwrap().flipv();
     let model = WireframeModel::from_file("african_head.obj".to_string());
-    canvas.render_z_buffer_texture_2(
+    canvas.render_z_buffer_texture_perspective(
         model,
         texture,
         Vec3 {
