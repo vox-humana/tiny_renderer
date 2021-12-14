@@ -57,6 +57,14 @@ impl Vec3<f32> {
         self.y /= n;
         self.z /= n;
     }
+
+    pub(crate) fn as_u16(self) -> Vec3<u16> {
+        Vec3 {
+            x: self.x as u16,
+            y: self.y as u16,
+            z: self.z as u16,
+        }
+    }
 }
 
 pub(crate) fn barycentric(pts: [Vec2<i32>; 3], p: Vec2<i32>) -> Vec3<f32> {

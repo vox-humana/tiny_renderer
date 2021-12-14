@@ -1,3 +1,4 @@
+use crate::matrix::{Matrix, ViewPort};
 use crate::point::{cross, diff, Point, Vec2, Vec3};
 use crate::rgb_image::{RGBColor, RGBImage};
 use image::{DynamicImage, GenericImageView};
@@ -264,6 +265,70 @@ impl RGBImage {
         }
     }
 
+    pub(crate) fn render_z_buffer_texture_2(
+        &mut self,
+        wireframe: WireframeModel,
+        texture: DynamicImage,
+        light_dir: Vec3<f32>,
+    ) {
+        let z_buffer_size: i32 = self.width as i32 * self.height as i32;
+        let mut z_buffer: Vec<f32> = (0..z_buffer_size).map(|_x| -1.0).collect();
+
+        let mut projection = Matrix::new_identity(4);
+        let camera_z = 3.0;
+        projection.m[3][2] = -1.0 / camera_z;
+        let view_port = ViewPort {
+            x: self.width / 8,
+            y: self.height / 8,
+            width: self.width * 3 / 4,
+            height: self.height * 3 / 4,
+        };
+        let projection_viewport = view_port.to_matrix() * projection;
+
+        for face in wireframe.faces {
+            let world_coords = face.map(|f| wireframe.vertexes[f.vertex_index]);
+            let mut n = cross(
+                diff(world_coords[2], world_coords[0]),
+                diff(world_coords[1], world_coords[0]),
+            );
+            n.normalize();
+            let intensity = light_dir.x * n.x + light_dir.y * n.y + light_dir.z * n.z;
+
+            let texture_coords = face
+                .map(|f| wireframe.texture_coord[f.texture_index])
+                .map(|p| Vec2 {
+                    x: texture.width() as f32 * p.0,
+                    y: texture.height() as f32 * p.1,
+                });
+
+            let texture_color = |bc: Vec3<f32>| -> RGBColor {
+                let uv = Vec2 {
+                    x: texture_coords[0].x * bc.x
+                        + texture_coords[1].x * bc.y
+                        + texture_coords[2].x * bc.z,
+                    y: texture_coords[0].y * bc.x
+                        + texture_coords[1].y * bc.y
+                        + texture_coords[2].y * bc.z,
+                };
+                let pixel = texture.get_pixel(uv.x as u32, uv.y as u32);
+                let color = RGBColor {
+                    r: pixel.0[0],
+                    g: pixel.0[1],
+                    b: pixel.0[2],
+                }
+                .with_intensity(intensity);
+                return color;
+            };
+            if intensity > 0.0 {
+                let pts = RGBImage::screen_triangle_3d_perspective(
+                    world_coords,
+                    projection_viewport.clone(),
+                );
+                self.triangle_z_buffer_bary(pts, &mut z_buffer, &texture_color);
+            }
+        }
+    }
+
     fn screen_triangle(world_coords: [Vec3<f32>; 3], width: u16, height: u16) -> [Vec2<u16>; 3] {
         let projection = |world_coords: Vec3<f32>| Vec2::<u16> {
             x: ((world_coords.x + 1.0) * (width as f32) / 2.0) as u16,
@@ -281,6 +346,22 @@ impl RGBImage {
             x: ((world_coords.x + 1.0) * (width as f32) / 2.0) as u16,
             y: ((world_coords.y + 1.0) * (height as f32) / 2.0) as u16,
             z: world_coords.z as u16,
+        };
+        [
+            projection(world_coords[0]),
+            projection(world_coords[1]),
+            projection(world_coords[2]),
+        ]
+    }
+
+    fn screen_triangle_3d_perspective(
+        world_coords: [Vec3<f32>; 3],
+        projection_matrix: Matrix,
+    ) -> [Vec3<u16>; 3] {
+        let projection = |world_coords: Vec3<f32>| {
+            (projection_matrix.clone() * world_coords.to_matrix())
+                .to_vector()
+                .as_u16()
         };
         [
             projection(world_coords[0]),
