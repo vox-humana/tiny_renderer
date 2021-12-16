@@ -121,7 +121,7 @@ impl RGBImage {
     pub(crate) fn triangle_z_buffer_bary(
         &mut self,
         points: [Vec3<u16>; 3],
-        zbuffer: &mut Vec<f32>,
+        z_buffer: &mut Vec<f32>,
         color_for_barycentric: &dyn Fn(Vec3<f32>) -> RGBColor,
     ) {
         let mut b_box_min = Vec2 {
@@ -155,8 +155,8 @@ impl RGBImage {
                 z += pts[1].z as f32 * bc_screen.y;
                 z += pts[2].z as f32 * bc_screen.z;
                 let buffer_index = (x as i32 + y as i32 * self.width as i32) as usize;
-                if zbuffer[buffer_index] < z {
-                    zbuffer[buffer_index] = z;
+                if z_buffer[buffer_index] < z {
+                    z_buffer[buffer_index] = z;
                     self.set_pixel(Point { x, y }, color_for_barycentric(bc_screen));
                 }
             }

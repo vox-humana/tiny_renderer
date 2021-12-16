@@ -114,9 +114,26 @@ fn lesson4() -> RGBImage {
         model,
         texture,
         Vec3 {
-            x: 0.0,
-            y: 0.0,
+            x: -1.0,
+            y: 1.0,
             z: -1.0,
+        },
+    );
+    canvas.flip_vertically();
+    return canvas;
+}
+
+fn lesson5() -> RGBImage {
+    let mut canvas = RGBImage::new(640, 640, BLACK_COLOR);
+    let texture = image::open("african_head_diffuse.tga").unwrap().flipv();
+    let model = WireframeModel::from_file("african_head.obj".to_string());
+    canvas.render_z_buffer_texture_perspective_gouraud(
+        model,
+        texture,
+        Vec3 {
+            x: 1.0,
+            y: -1.0,
+            z: 1.0,
         },
     );
     canvas.flip_vertically();
@@ -135,7 +152,7 @@ impl Lesson {
     }
 }
 
-pub fn lessons() -> [Lesson; 9] {
+pub fn lessons() -> [Lesson; 10] {
     [
         Lesson {
             name: "Pixel",
@@ -172,6 +189,10 @@ pub fn lessons() -> [Lesson; 9] {
         Lesson {
             name: "Perspective projection",
             renderer: lesson4,
+        },
+        Lesson {
+            name: "Gouraud shading",
+            renderer: lesson5,
         },
     ]
 }

@@ -1,4 +1,4 @@
-use crate::point::Vec3;
+use crate::point::{cross, diff, Vec3};
 use std::ops::Mul;
 
 pub(crate) struct ViewPort {
@@ -91,4 +91,22 @@ impl Mul for Matrix {
         }
         return r;
     }
+}
+
+pub(crate) fn look_at(eye: Vec3<f32>, center: Vec3<f32>, up: Vec3<f32>) -> Matrix {
+    let z = diff(eye, center).normalized();
+    let x = cross(up, z).normalized();
+    let y = cross(z, x).normalized();
+
+    let mut m = Matrix::new_identity(4);
+    let mut fill_matrix = |i: usize, v: [f32; 4]| {
+        m.m[0][i] = v[0];
+        m.m[1][i] = v[1];
+        m.m[2][i] = v[2];
+        m.m[i][3] = v[3];
+    };
+    fill_matrix(0, [x.x, y.x, z.x, -center.x]);
+    fill_matrix(1, [x.y, y.y, z.y, -center.y]);
+    fill_matrix(2, [x.z, y.z, z.z, -center.z]);
+    return m;
 }

@@ -1,4 +1,4 @@
-use std::ops::{Mul, Sub};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Vec2<T> {
@@ -8,7 +8,7 @@ pub(crate) struct Vec2<T> {
 
 pub(crate) type Point = Vec2<u16>;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub(crate) struct Vec3<T> {
     pub(crate) x: T,
     pub(crate) y: T,
@@ -56,6 +56,15 @@ impl Vec3<f32> {
         self.x /= n;
         self.y /= n;
         self.z /= n;
+    }
+
+    pub(crate) fn normalized(&self) -> Self {
+        let n = self.norm();
+        return Vec3 {
+            x: self.x / n,
+            y: self.y / n,
+            z: self.z / n,
+        };
     }
 
     pub(crate) fn as_u16(self) -> Vec3<u16> {
@@ -116,4 +125,8 @@ pub(crate) fn diff<T: Sub<Output = T>>(v1: Vec3<T>, v2: Vec3<T>) -> Vec3<T> {
         y: v1.y - v2.y,
         z: v1.z - v2.z,
     }
+}
+
+pub(crate) fn dot_product<T: Mul<Output = T> + Add<Output = T>>(v1: Vec3<T>, v2: Vec3<T>) -> T {
+    v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
 }

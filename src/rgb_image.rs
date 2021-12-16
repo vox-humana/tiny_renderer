@@ -33,6 +33,7 @@ impl RGBColor {
     }
 
     pub(crate) fn with_intensity(self, i: f32) -> RGBColor {
+        assert!(i >= 0.0);
         RGBColor {
             b: (self.b as f32 * i) as u8,
             g: (self.g as f32 * i) as u8,
